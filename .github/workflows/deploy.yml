@@ -1,4 +1,4 @@
-name: Deploy FastAPI API to Vercel
+name: Deploy FastAPI to EC2
 
 on:
   push:
@@ -11,20 +11,21 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2 
+        uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
+      - name: Install SSH key
+        uses: webfactory/ssh-agent@v0.7.0
         with:
-          python-version: '3.9' 
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Install dependencies
+      - name: SSH into EC2 and deploy
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Deploy to Vercel
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: |
-          npx vercel --prod --token $VERCEL_TOKEN
+          ssh -o StrictHostKeyChecking=no \
+              -i ${{ secrets.SSH_PRIVATE_KEY }} \
+              ubuntu@${{ secrets.EC2_HOST }} \
+              "cd fastapi-book-project && \
+               git fetch origin main && \
+               git reset --hard origin/main && \
+               source venv/bin/activate && \
+               pip install -r requirements.txt && \
+               python3 -m uvicorn main:app"
