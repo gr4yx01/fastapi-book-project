@@ -20,11 +20,12 @@ jobs:
 
       - name: SSH into EC2 and deploy
         run: |
+          chmod 600 ${{ secrets.SSH_PRIVATE_KEY }} && \
           ssh -o StrictHostKeyChecking=no \
               -i ${{ secrets.SSH_PRIVATE_KEY }} \
               ubuntu@${{ secrets.EC2_HOST }} \
               "cd fastapi-book-project && \
-               git fetch origin main && \
+               git fetch origin main && \  
                source venv/bin/activate && \
-               pip install -r requirements.txt && \
+               pip install -r requirements.txt && \  
                python3 -m uvicorn main:app" 
